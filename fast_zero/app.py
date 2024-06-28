@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 from fastapi import Depends, FastAPI, HTTPException
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from fast_zero.database import get_session
@@ -57,6 +57,19 @@ def read_users(
     return {'users': users}
 
 
+@app.get('/users/{user_id}', response_model=UserPublic)
+def get_user_by_id(user_id: int, session: Session = Depends(get_session)):
+    user = session.scalar(
+        Select(User).where(User.id == user_id)
+    )
+    if not user:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
+
+    return user
+
+
 @app.put('/users/{user_id}', response_model=UserPublic)
 def update_user(
     user_id: int, user: UserSchema, session: Session = Depends(get_session)
@@ -65,7 +78,7 @@ def update_user(
 
     if not db_user:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail={'User not found'}
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
 
     db_user.email = user.email
@@ -85,7 +98,7 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
 
     if not db_user:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail={'User not found'}
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
 
     session.delete(db_user)
