@@ -1,6 +1,8 @@
 from http import HTTPStatus
 
+from fast_zero.models import User
 from fast_zero.schemas import UserPublic
+from fast_zero.security import get_password_hash
 
 
 def test_root_deve_retorna_ok_e_ola_mundo(client):
@@ -123,6 +125,28 @@ def test_update_user_not_found(client):
     assert response.json() == {'detail': 'Not authenticated'}
 
 
+def test_update_user_not_enough_permissions(client, session, token, user):
+    another_user = User(
+        username='Another',
+        email='another@test.com',
+        password=get_password_hash('another')
+    )
+    session.add(another_user)
+    session.commit()
+
+    response = client.put(
+        f'/users/{another_user.id}',
+        json={
+            'email': 'new@test.com',
+            'username': 'new',
+            'password': 'newpassword'},
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Not enough permissions'}
+
+
 def test_delete_user(client, user, token):
     response = client.delete(
         f'/users/{user.id}',
@@ -139,6 +163,24 @@ def test_delete_without_user(client):
     assert response.json() == {'detail': 'Not authenticated'}
 
 
+def test_delete_user_not_enough_permissions(client, session, token, user):
+    another_user = User(
+        username='Another',
+        email='another@test.com',
+        password=get_password_hash('another')
+    )
+    session.add(another_user)
+    session.commit()
+
+    response = client.delete(
+        f'/users/{another_user.id}',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Not enough permissions'}
+
+
 def test_get_token(client, user):
     response = client.post(
         '/token',
@@ -150,3 +192,13 @@ def test_get_token(client, user):
     assert response.status_code == HTTPStatus.OK
     assert token['token_type'] == 'Bearer'
     assert 'access_token' in token
+
+
+def test_login_for_access_token_incorrect_credentials(client, session):
+    response = client.post(
+        '/token',
+        data={'username': 'wrong@test.com', 'password': 'wrongpassword'}
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Incorrect email or password'}
