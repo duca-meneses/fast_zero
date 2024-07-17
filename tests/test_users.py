@@ -29,7 +29,7 @@ def test_create_user_with_email_already_exists(client, user):
         json={
             'username': 'testusername',
             'password': 'testpassword',
-            'email': 'test@test.com',
+            'email': user.email,
         },
     )
 
@@ -41,7 +41,7 @@ def test_create_user_with_username_already_exists(client, user):
     response = client.post(
         '/users/',
         json={
-            'username': 'Test',
+            'username': user.username,
             'password': 'testpassword',
             'email': 'test@email.com',
         },
@@ -71,9 +71,9 @@ def test_get_user_by_id(client, user):
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'id': 1,
-        'username': 'Test',
-        'email': 'test@test.com',
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
     }
 
 
@@ -116,9 +116,9 @@ def test_update_user_not_found(client):
     assert response.json() == {'detail': 'Not authenticated'}
 
 
-def test_update_user_not_enough_permissions(client, token, user):
+def test_update_user_not_enough_permissions(client, token, other_user):
     response = client.put(
-        f'/users/{user.id + 1}',
+        f'/users/{other_user.id}',
         json={
             'email': 'new@test.com',
             'username': 'new',
@@ -147,9 +147,9 @@ def test_delete_without_user(client):
     assert response.json() == {'detail': 'Not authenticated'}
 
 
-def test_delete_user_not_enough_permissions(client, token, user):
+def test_delete_user_not_enough_permissions(client, token, other_user):
     response = client.delete(
-        f'/users/{user.id + 1}',
+        f'/users/{other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
 
