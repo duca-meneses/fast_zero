@@ -97,8 +97,7 @@ def test_token_expired_dont_refresh(client, user):
 
     with freeze_time('2023-07-14 12:31:00'):
         response = client.post(
-            '/auth/refresh_token',
-            headers={'Authorization': f'Bearer {token}'}
+            '/auth/refresh_token', headers={'Authorization': f'Bearer {token}'}
         )
 
         assert response.status_code == HTTPStatus.UNAUTHORIZED
