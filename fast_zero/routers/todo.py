@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Annotated
 
@@ -31,8 +31,8 @@ def create_todos(todo: TodoSchema, session: T_Session, user: CurrentUser):
         description=todo.description,
         state=todo.state,
         users_id=user.id,
+        updated_at=datetime.now(tz=UTC).replace(microsecond=0),
     )
-    db_todo.updated_at = db_todo.created_at
 
     session.add(db_todo)
     session.commit()
@@ -83,7 +83,7 @@ def patch_todo(
     for key, value in todo.model_dump(exclude_unset=True).items():
         setattr(db_todo, key, value)
 
-    db_todo.updated_at = datetime.now()
+    db_todo.updated_at = datetime.now(tz=UTC).replace(microsecond=0)
 
     session.add(db_todo)
     session.commit()

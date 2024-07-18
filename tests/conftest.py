@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import factory
 import factory.fuzzy
 import pytest
@@ -27,6 +29,7 @@ class TodoFactory(factory.Factory):
     title = factory.Faker('text')
     description = factory.Faker('text')
     state = factory.fuzzy.FuzzyChoice(TodoState)
+    updated_at = datetime.now(tz=UTC).replace(microsecond=0)
     users_id = 1
 
 

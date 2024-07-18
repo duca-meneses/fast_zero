@@ -43,7 +43,7 @@ class Todo:
         init=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        init=False, onupdate=func.now(), nullable=True
+        init=True, onupdate=func.now(), nullable=True
     )
 
     users_id: Mapped[int] = mapped_column(ForeignKey('users.id'))

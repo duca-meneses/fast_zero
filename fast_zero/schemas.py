@@ -44,7 +44,7 @@ class TodoSchema(BaseModel):
 class TodoPublic(TodoSchema):
     id: int
     created_at: datetime
-    updated_at: datetime | None
+    updated_at: datetime
 
 
 class TodoList(BaseModel):
