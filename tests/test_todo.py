@@ -1,10 +1,12 @@
+from datetime import timedelta
 from http import HTTPStatus
+
+from freezegun import freeze_time
 
 from fast_zero.models import TodoState
 from tests.conftest import TodoFactory
 
 
-# TODO: Modified users_id para user_id quando modificar o banco para user_id
 def test_create_todo(client, token):
     response = client.post(
         '/todos/',
@@ -15,11 +17,16 @@ def test_create_todo(client, token):
             'state': 'draft',
         },
     )
+    created_at = response.json()['created_at']
+    updated_at = response.json()['updated_at']
+
     assert response.json() == {
         'id': 1,
         'title': 'Test todo',
         'description': 'Test todo description',
         'state': 'draft',
+        'created_at': created_at,
+        'updated_at': updated_at,
     }
 
 
@@ -161,6 +168,24 @@ def test_patch_todo(session, client, user, token):
     )
     assert response.status_code == HTTPStatus.OK
     assert response.json()['title'] == 'teste!'
+
+
+def test_patch_todo_with_created_at_different_update_at(
+    session, client, user, token
+):
+    todo = TodoFactory(users_id=user.id)
+
+    session.add(todo)
+    session.commit()
+    session.refresh(todo)
+    after_30_minutes = todo.created_at + timedelta(minutes=10)
+    with freeze_time(after_30_minutes):
+        response = client.patch(
+            f'/todos/{todo.id}',
+            json={'title': 'teste!'},
+            headers={'Authorization': f'Bearer {token}'},
+        )
+    assert response.json()['created_at'] != response.json()['updated_at']
 
 
 def test_delete_todo(session, client, user, token):
