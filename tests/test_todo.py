@@ -178,8 +178,8 @@ def test_patch_todo_with_created_at_different_update_at(
     session.add(todo)
     session.commit()
     session.refresh(todo)
-    after_30_minutes = todo.created_at + timedelta(minutes=10)
-    with freeze_time(after_30_minutes):
+    after_10_minutes = todo.created_at + timedelta(minutes=10)
+    with freeze_time(after_10_minutes):
         response = client.patch(
             f'/todos/{todo.id}',
             json={'title': 'teste!'},
