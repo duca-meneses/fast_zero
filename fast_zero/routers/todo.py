@@ -1,3 +1,4 @@
+from datetime import datetime
 from http import HTTPStatus
 from typing import Annotated
 
@@ -31,6 +32,7 @@ def create_todos(todo: TodoSchema, session: T_Session, user: CurrentUser):
         state=todo.state,
         users_id=user.id,
     )
+    db_todo.updated_at = db_todo.created_at
 
     session.add(db_todo)
     session.commit()
@@ -80,6 +82,8 @@ def patch_todo(
 
     for key, value in todo.model_dump(exclude_unset=True).items():
         setattr(db_todo, key, value)
+
+    db_todo.updated_at = datetime.now()
 
     session.add(db_todo)
     session.commit()
